@@ -15,14 +15,15 @@ allMas_group = "All Timeframe MAs"
 dmas_group = "Daily MAs"
 indicators = "Indicators"
 
+showChillax = input.bool(false, "Show Chillax", group = displayIndicators, inline = "row1") and (timeframe.isdaily or timeframe.isweekly)
 only20ema = input.bool(false, "Only 20ema", group = displayIndicators, inline = "row1")
-excludeDailyIntraday = input.bool(false, "Exclude Daily Intraday", group = dmas_group, inline = "row2")
+excludeDailyIntraday = input.bool(true, "Exclude Daily Intraday", group = dmas_group, inline = "row2")
 showBB_SP = input.bool(false, "Show BB SP", group = indicators, inline = "row1") and timeframe.isdaily
 showADR = input.bool(true, "Show ADR", group = indicators, inline = "row1") and (timeframe.isdaily or timeframe.isweekly)
 screenshot = input.bool(false, "Screenshot", group = indicators, inline = "row1") and (timeframe.isdaily or timeframe.isweekly)
 
 showMAs = input.bool(true, "Show MAs All TF", group = allMas_group, inline = "50_200") and (not only20ema) and (not showBB_SP)
-showDMAs = input.bool(true, "Show Daily MAs", group = dmas_group, inline = "row2") and (timeframe.isintraday or (not showMAs and timeframe.isdaily)) and (not only20ema) and (not excludeDailyIntraday) and (not showBB_SP)
+showDMAs = input.bool(false, "Show Daily MAs", group = dmas_group, inline = "row2") and (timeframe.isintraday or (not showMAs and timeframe.isdaily)) and (not only20ema) and (not excludeDailyIntraday) and (not showBB_SP)
 
 show_50 = (input.bool(false, "Show 50sma", group = allMas_group, inline ="50_200" ) and (not only20ema) and (showMAs) and (timeframe.isdaily or timeframe.isweekly) ) or screenshot
 show_100 = (input.bool(false, "Show 100sma", group = allMas_group, inline ="50_200" ) and (not only20ema) and (showMAs) and (timeframe.isdaily or timeframe.isweekly)) or screenshot
@@ -152,3 +153,38 @@ if showADR
     table.cell(atrDisplay, 0, 0, "V: " + str.tostring(volume/1000000,"0.00") + "m",text_color = close > close[1] ? color.lime : color.red)
     table.cell(atrDisplay, 1, 0, "VAv: " + str.tostring(avgVol/1000000,"0.00") + "m",text_color = color.yellow)
     table.cell(atrDisplay, 0, 1, "Rv: " + str.tostring(rVol,"0.0"),text_color = rVol > 1 ? color.lime : color.gray)
+
+// yourmama = input.string(title='', options=['SMA', 'EMA'], defval='SMA', group='Moving Averages Type')
+
+// ma(ma1_day_source, ma1_day_length, ma1_day_type)
+//chillax
+
+chillax = 'Chillax Settings'
+
+ma1cl = input(10, title="First MA length", group = chillax, inline="row1")
+src1cl = close
+out1 = timeframe.isdaily ? ma(src1cl, ma1cl,'SMA') : timeframe.isweekly ? ma(src1cl, ma1cl,'EMA') : na
+
+ma2cl = input(20, title="Second MA length", group = chillax, inline = "row1")
+src2 = close
+out2 = timeframe.isdaily ? ma(src2, ma2cl,'SMA') : timeframe.isweekly ? ma(src2, ma2cl,'EMA') : na
+
+
+// plot(out1, color=color.red)
+// plot(out2, color=color.black)
+
+// the number of bars to determine uptrend, if trendlen is 5, and if today's ma is higher than 5 days ago's ma, then it is an uptrend
+trendlen = input(5, title="number of bars to determine uptrend", group = chillax, inline = "row2")
+
+
+over = out1 > out2 
+out1up = out1 > out1[trendlen]
+out2up = out2 > out2[trendlen] 
+
+green = out1 > out2 and out1up and out2up
+lightgreen = out1 > out2 and out1up and not out2up
+yellow = out1 > out2 and not out1up and not out2up
+
+bgColor = showChillax ? (green ? color.new(color.rgb(0, 150, 0), 50) : lightgreen ? color.new(color.rgb(0, 255, 0), 80) : yellow ? color.new(color.yellow, 80) : na) : na
+   
+bgcolor(color=bgColor)
