@@ -31,7 +31,7 @@ show_200 = (input.bool(false, "Show 200sma", group = allMas_group, inline ="50_2
 
 showOops = input.bool(true, "Show Oops", group = displayIndicators, inline ="oops") and timeframe.isdaily
 showOopsFail = input.bool(false, "Show Oops Fail", group = displayIndicators, inline ="oops") and timeframe.isdaily
-showQQQ20 = input.bool(true, "Show QQQ20", group = displayIndicators, inline = "row1") and (timeframe.isdaily)
+showQQQ20 = input.bool(false, "Show QQQ20", group = displayIndicators, inline = "row1") and (timeframe.isdaily)
 showRSI = input.bool(false, "Show W RSI", group = indicators, inline="RSI") and timeframe.isdaily
 
 
@@ -52,6 +52,8 @@ ma2_day_color  = input(color.yellow, ""     , inline="MA Day №2", group = dmas
 // ma2_day = ma(ma2_day_source, ma2_day_length, ma2_day_type)
 ma2_day = request.security(syminfo.tickerid, "D", ma(ma2_day_source, ma2_day_length, ma2_day_type),lookahead = barmerge.lookahead_off, gaps=barmerge.gaps_on)
 plot(show_ma2_day ? ma2_day : na, color = ma2_day_color, title="MA Day №2", linewidth = 2)
+
+// ma_type = input.string("EMA", title = "SMA?", options=["SMA", "EMA"], group = allMas_group)
 
 show_ma1   = input(true   , "MA №1", inline="MA #1", group = allMas_group) and showMAs
 ma1_type   = input.string("EMA"  , ""     , inline="MA #1", options=["SMA", "EMA", "SMMA (RMA)", "WMA", "VWMA"], group = allMas_group)
@@ -112,8 +114,8 @@ w = request.security(syminfo.ticker, "W", w_rsi)
 plot_rsi = w > rsi_input and showRSI
 plotshape(plot_rsi, style=shape.arrowup, location = location.bottom, color = color.gray, size = size.small)
 
-plot(show_ma2 ? ma2 : na, color = plotQQQ20 ? color.lime : color.yellow, title="MA №2", linewidth = 2)
-plot(show_ma2_day ? ma2_day : na, color = plotQ20I ? color.lime : color.yellow, title="MA Day №2", linewidth = 2)
+plot(show_ma2 ? ma2 : na, color = plotQQQ20 ? color.green : color.yellow, title="MA №2", linewidth = 2)
+plot(show_ma2_day ? ma2_day : na, color = plotQ20I ? color.yellow : color.yellow, title="MA Day №2", linewidth = 2)
 
 
 length = 20
@@ -188,3 +190,266 @@ yellow = out1 > out2 and not out1up and not out2up
 bgColor = showChillax ? (green ? color.new(color.rgb(0, 150, 0), 50) : lightgreen ? color.new(color.rgb(0, 255, 0), 80) : yellow ? color.new(color.yellow, 80) : na) : na
    
 bgcolor(color=bgColor)
+
+
+// PIVOTS 
+
+DAILY = "Daily"
+
+TRADITIONAL = "Traditional"
+
+kind = TRADITIONAL
+pivot_time_frame = DAILY
+showPivots = input.bool(true,"Show Pivots -", group = displayIndicators, inline = "row3") and timeframe.isminutes
+look_back = input.int(title="# of days", defval=1, minval=1, maxval=5000, group = displayIndicators, inline = "row3")
+is_daily_based = true
+show_labels = false
+show_prices = false
+position_labels = "Left"
+line_width = 1
+
+showPPs = timeframe.isminutes
+hideOthers = true
+ppThickness = 3
+
+
+var DEF_COLOR = #FB8C00
+var arr_time = array.new_int()
+var p = array.new_float()
+p_color = color.gray
+p_show = true
+var r1 = array.new_float()
+var s1 = array.new_float()
+s1_color = color.aqua
+s1_show = true
+r1_color = color.orange
+r1_show = true 
+var r2 = array.new_float()
+var s2 = array.new_float()
+s2_color = color.blue
+s2_show = true
+r2_color = color.red
+r2_show = true
+
+pivotX_open = float(na)
+pivotX_open := nz(pivotX_open[1], open)
+pivotX_high = float(na)
+pivotX_high := nz(pivotX_high[1], high)
+pivotX_low = float(na)
+pivotX_low := nz(pivotX_low[1], low)
+pivotX_prev_open = float(na)
+pivotX_prev_open := nz(pivotX_prev_open[1])
+pivotX_prev_high = float(na)
+pivotX_prev_high := nz(pivotX_prev_high[1])
+pivotX_prev_low = float(na)
+pivotX_prev_low := nz(pivotX_prev_low[1])
+pivotX_prev_close = float(na)
+pivotX_prev_close := nz(pivotX_prev_close[1])
+
+get_pivot_resolution() =>
+    resolution = "D"
+    resolution
+
+var lines = array.new_line()
+var labels = array.new_label()
+
+draw_line(i, pivot, col) =>
+    if array.size(arr_time) > 1
+        array.push(lines, line.new(array.get(arr_time, i), array.get(pivot, i), array.get(arr_time, i + 1), array.get(pivot, i), color=col, xloc=xloc.bar_time, width=ppThickness))
+
+draw_label(i, y, txt, txt_color) =>
+    if (show_labels or show_prices) and not na(y)
+        display_text = (show_labels ? txt : "") + (show_prices ? str.format(" ({0})", math.round_to_mintick(y)) : "")
+        label_style = position_labels == "Left" ? label.style_label_right : label.style_label_left
+        x = position_labels == "Left" ? array.get(arr_time, i) : array.get(arr_time, i + 1)
+        array.push(labels, label.new(x = x, y=y, text=display_text, textcolor=txt_color, style=label_style, color=#00000000, xloc=xloc.bar_time))
+
+traditional() =>
+    pivotX_Median = (pivotX_prev_high + pivotX_prev_low + pivotX_prev_close) / 3
+    array.push(p, pivotX_Median)
+    array.push(r1, pivotX_Median * 2 - pivotX_prev_low)
+    array.push(s1, pivotX_Median * 2 - pivotX_prev_high)
+    array.push(r2, pivotX_Median + 1 * (pivotX_prev_high - pivotX_prev_low))
+    array.push(s2, pivotX_Median - 1 * (pivotX_prev_high - pivotX_prev_low))
+
+calc_pivot() =>
+    if kind == TRADITIONAL
+        traditional()
+
+resolution = get_pivot_resolution()
+
+SIMPLE_DIVISOR = -1
+custom_years_divisor = SIMPLE_DIVISOR
+
+calc_high(prev, curr) =>
+    if na(prev) or na(curr)
+        nz(prev, nz(curr, na))
+    else
+        math.max(prev, curr)
+    
+calc_low(prev, curr) =>
+    if not na(prev) and not na(curr)
+        math.min(prev, curr)
+    else
+        nz(prev, nz(curr, na))
+
+calc_OHLC_for_pivot(custom_years_divisor) =>
+    if custom_years_divisor == SIMPLE_DIVISOR 
+        [open, high, low, close, open[1], high[1], low[1], close[1], time[1], time_close]
+    else
+        var prev_sec_open = float(na)
+        var prev_sec_high = float(na)
+        var prev_sec_low = float(na)
+        var prev_sec_close = float(na)
+        var prev_sec_time = int(na)
+        var curr_sec_open = float(na)
+        var curr_sec_high = float(na)
+        var curr_sec_low = float(na)
+        var curr_sec_close = float(na)
+        if year(time_close) % custom_years_divisor == 0
+            curr_sec_open := open
+            curr_sec_high := high
+            curr_sec_low := low
+            curr_sec_close := close
+            prev_sec_high := high[1]
+            prev_sec_low := low[1]
+            prev_sec_close := close[1]
+            prev_sec_time := time[1]
+            for i = 2 to custom_years_divisor
+                prev_sec_open :=  nz(open[i], prev_sec_open)
+                prev_sec_high := calc_high(prev_sec_high, high[i])
+                prev_sec_low := calc_low(prev_sec_low, low[i])
+                prev_sec_time := nz(time[i], prev_sec_time)
+        [curr_sec_open, curr_sec_high, curr_sec_low, curr_sec_close, prev_sec_open, prev_sec_high, prev_sec_low, prev_sec_close, prev_sec_time, time_close]
+
+
+[sec_open, sec_high, sec_low, sec_close, prev_sec_open, prev_sec_high, prev_sec_low, prev_sec_close, prev_sec_time, sec_time] = request.security(syminfo.tickerid, resolution, calc_OHLC_for_pivot(custom_years_divisor), lookahead = barmerge.lookahead_on)
+sec_open_gaps_on = request.security(syminfo.tickerid, resolution, open, gaps = barmerge.gaps_on, lookahead = barmerge.lookahead_on)
+
+if showPivots
+    is_change_years = false
+
+    var is_change = false
+    var uses_current_bar = false
+    var change_time = int(na)
+    is_time_change = false //(ta.change(time(resolution)) and custom_years_divisor == SIMPLE_DIVISOR) or is_change_years
+    if is_time_change
+        change_time := time
+
+    var start_time = time
+    var was_last_premarket = false
+    var start_calculate_in_premarket = false
+
+    is_last_premarket = barstate.islast and session.ispremarket and time_close > sec_time and not was_last_premarket
+
+    if is_last_premarket
+        was_last_premarket := true
+        start_calculate_in_premarket := true
+    if session.ismarket
+        was_last_premarket := false
+        
+    without_time_change = barstate.islast and array.size(arr_time) == 0
+    is_can_calc_pivot = (not uses_current_bar and is_time_change and session.ismarket) or (ta.change(sec_open) and not start_calculate_in_premarket) or is_last_premarket or (uses_current_bar and not na(sec_open_gaps_on)) or without_time_change
+    enough_bars_for_calculate = prev_sec_time >= start_time or is_daily_based
+
+    if is_can_calc_pivot and enough_bars_for_calculate
+        if array.size(arr_time) == 0 and is_daily_based
+            pivotX_prev_open := prev_sec_open[1]
+            pivotX_prev_high := prev_sec_high[1]
+            pivotX_prev_low := prev_sec_low[1]
+            pivotX_prev_close := prev_sec_close[1]
+            pivotX_open := sec_open[1]
+            pivotX_high := sec_high[1]
+            pivotX_low := sec_low[1]
+            array.push(arr_time, start_time)
+            calc_pivot()
+        
+        if is_daily_based
+            if is_last_premarket
+                pivotX_prev_open := sec_open
+                pivotX_prev_high := sec_high
+                pivotX_prev_low := sec_low
+                pivotX_prev_close := sec_close
+                pivotX_open := open
+                pivotX_high := high
+                pivotX_low := low
+            else
+                pivotX_prev_open := prev_sec_open
+                pivotX_prev_high := prev_sec_high
+                pivotX_prev_low := prev_sec_low
+                pivotX_prev_close := prev_sec_close
+                pivotX_open := sec_open
+                pivotX_high := sec_high
+                pivotX_low := sec_low
+        else
+            pivotX_prev_high := pivotX_high
+            pivotX_prev_low := pivotX_low
+            pivotX_prev_open := pivotX_open
+            pivotX_prev_close := close[1]
+            pivotX_open := open
+            pivotX_high := high
+            pivotX_low := low
+
+        if barstate.islast and not is_change and array.size(arr_time) > 0 and not without_time_change
+            array.set(arr_time, array.size(arr_time) - 1, change_time)
+        else if without_time_change
+            array.push(arr_time, start_time)
+        else
+            array.push(arr_time, nz(change_time, time))
+
+        calc_pivot()
+
+        if array.size(arr_time) > look_back
+            if array.size(arr_time) > 0
+                array.shift(arr_time)
+            if array.size(p) > 0 and p_show
+                array.shift(p)
+            if array.size(r1) > 0 and r1_show
+                array.shift(r1)
+            if array.size(s1) > 0 and s1_show
+                array.shift(s1)
+            if array.size(r2) > 0 and r2_show
+                array.shift(r2)
+            if array.size(s2) > 0 and s2_show
+                array.shift(s2)
+        is_change := true
+    else if not is_daily_based
+        pivotX_high := math.max(pivotX_high, high)
+        pivotX_low := math.min(pivotX_low, low)
+
+    if barstate.islast and not is_daily_based and array.size(arr_time) == 0 
+        runtime.error("Not enough intraday data to calculate Pivot Points. Lower the Pivots Timeframe or turn on the 'Use Daily-based Values' option in the indicator settings.")
+
+    if barstate.islast and array.size(arr_time) > 0 and is_change
+        is_change := false
+        if custom_years_divisor > 0
+            last_pivot_time = array.get(arr_time, array.size(arr_time) - 1)
+            pivot_timeframe = str.tostring(12 * custom_years_divisor) + "M"
+            estimate_pivot_time = last_pivot_time + timeframe.in_seconds(pivot_timeframe) * 1000
+            array.push(arr_time, estimate_pivot_time)
+        else
+            array.push(arr_time, time_close(resolution))
+
+        for i = 0 to array.size(lines) - 1
+            if array.size(lines) > 0
+                line.delete(array.shift(lines))
+            if array.size(labels) > 0
+                label.delete(array.shift(labels))
+
+        for i = 0 to array.size(arr_time) - 2
+            if array.size(p) > 0 and p_show
+                draw_line(i, p, p_color)
+                draw_label(i, array.get(p, i), "P", p_color)
+            if array.size(r1) > 0 and r1_show
+                draw_line(i, r1, r1_color)
+                draw_label(i, array.get(r1, i), "R1", r1_color)
+            if array.size(s1) > 0 and s1_show
+                draw_line(i, s1, s1_color)
+                draw_label(i, array.get(s1, i), "S1", s1_color)
+            if array.size(r2) > 0 and r2_show
+                draw_line(i, r2, r2_color)
+                draw_label(i, array.get(r2, i), "R2", r2_color)
+            if array.size(s2) > 0 and s2_show
+                draw_line(i, s2, s2_color)
+                draw_label(i, array.get(s2, i), "S2", s2_color)
+
