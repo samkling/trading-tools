@@ -1,0 +1,97 @@
+#SamK_SC_Levels
+declare upper;
+
+input ShowTodayOnly = yes;
+input ShowColorChange = no;
+input gapper_threshold = 19;
+input smallcap_threshold = 16;
+input runner_threshold = 30;
+
+def openToday = open(period = "Day")[0];
+def prevClose = close(period = "Day")[1];
+def highToday = high(period = "Day")[0];
+def stopDist = high(period = "Day")[0]- close(period = "Day")[0];
+def isRunner = ((highToday-openToday)/openToday) > (runner_threshold/100);
+def isSmallCap = (openToday < smallcap_threshold) or isRunner;
+def isGapper = ((openToday-prevClose)/prevClose) > (gapper_threshold/100) and (openToday > 1);
+
+input upper_25 = 9;
+input upper_median = 23;
+input upper_75 = 46;
+input upper_90 = 75;
+input upper_90_run = 105;
+
+input lower_median = 30;
+input lower_75 = 39;
+
+def targ_median = if isSmallCap and !isGapper then 23 else lower_median;
+def targ_75 = if isSmallCap and !isGapper then 30 else lower_75;
+
+AddLabel(yes, "HOD: " + stopDist, Color.light_Gray);
+AddLabel(isGapper, "Gapper", Color.Green);
+AddLabel(isRunner, "Runner", Color.Light_green);
+AddLabel(isSmallCap and isGapper, "R25: " + upper_25 + " %", Color.light_gray);
+AddLabel(isSmallCap and isGapper, "R50: " + upper_median + " %", Color.ORANGE);
+AddLabel(isSmallCap, "R75: " + upper_75 + " %", Color.DARK_ORANGE);
+AddLabel(isSmallCap, "R90: " + upper_90 + " %", Color.LIGHT_RED);
+AddLabel(isSmallCap and !isGapper, "Run90: " + upper_90_run + " %", Color.RED);
+
+AddLabel(isSmallCap, "T50: -" + (targ_median) + " %", Color.VIOLET);
+AddLabel(isSmallCap, "T75: -" + (targ_75) + " %", Color.MAGENTA);
+
+def Today = if GetDay() == GetLastDay() then 1 else 0;
+
+
+plot High_25 = if (ShowTodayOnly and !Today) or !isGapper then Double.NaN else openToday * (upper_25 / 100 + 1);
+
+plot High_Median = if (ShowTodayOnly and !Today) or !isGapper then Double.NaN else openToday * (upper_median / 100 + 1);
+
+plot High_75th_percentile = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_75 / 100 + 1);
+
+plot High_90th_percentile = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_90 / 100 + 1);
+
+plot High_90th_percentile_run = if (ShowTodayOnly and !Today) or isGapper then Double.NaN else openToday * (upper_90_run / 100 + 1);
+
+plot Target_Median = if ShowTodayOnly and !Today then Double.NaN else highToday * (1 - targ_median / 100);
+
+plot Target_75th_percentile = if ShowTodayOnly and !Today then Double.NaN else highToday * (1 - targ_75 / 100);
+
+def highAbove25 = highToday > High_25;
+def isSmallCapGapperAndColorChange = isSmallCap and ShowColorChange and isGapper;
+
+AssignPriceColor(if highAbove25 or !isSmallCapGapperAndColorChange then color.current else color.light_gray);
+
+High_25.SetDefaultColor(Color.light_gray);
+High_25.SetPaintingStrategy(PaintingStrategy.LINE);
+High_25.SetStyle(Curve.FIRM);
+High_25.SetLineWeight(1);
+
+High_Median.SetDefaultColor(Color.ORANGE);
+High_Median.SetPaintingStrategy(PaintingStrategy.LINE);
+High_Median.SetStyle(Curve.FIRM);
+High_Median.SetLineWeight(1);
+
+High_75th_percentile.SetDefaultColor(Color.DARK_ORANGE);
+High_75th_percentile.SetPaintingStrategy(PaintingStrategy.LINE);
+High_75th_percentile.SetStyle(Curve.FIRM);
+High_75th_percentile.SetLineWeight(1);
+
+High_90th_percentile.SetDefaultColor(Color.LIGHT_RED);
+High_90th_percentile.SetPaintingStrategy(PaintingStrategy.LINE);
+High_90th_percentile.SetStyle(Curve.FIRM);
+High_90th_percentile.SetLineWeight(1);
+
+High_90th_percentile_run.SetDefaultColor(Color.RED);
+High_90th_percentile_run.SetPaintingStrategy(PaintingStrategy.LINE);
+High_90th_percentile_run.SetStyle(Curve.FIRM);
+High_90th_percentile_run.SetLineWeight(1);
+
+Target_Median.SetDefaultColor(Color.VIOLET);
+Target_Median.SetPaintingStrategy(PaintingStrategy.LINE);
+Target_Median.SetStyle(Curve.FIRM);
+Target_Median.SetLineWeight(1);
+
+Target_75th_percentile.SetDefaultColor(Color.MAGENTA);
+Target_75th_percentile.SetPaintingStrategy(PaintingStrategy.LINE);
+Target_75th_percentile.SetStyle(Curve.FIRM);
+Target_75th_percentile.SetLineWeight(1);

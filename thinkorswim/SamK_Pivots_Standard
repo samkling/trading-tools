@@ -1,0 +1,46 @@
+#SamK_Pivots_Standard
+input ShowTodayOnly = yes;
+
+def Today = if GetDay() == GetLastDay() then 1 else 0;
+
+#plot DailyClose = if ShowTodayOnly and !Today then Double.NaN else close(period=”DAY”)[1];
+
+plot pivot = if ShowTodayOnly and !Today then Double.NaN else (high(period=”DAY”)[1]+low(period=”DAY”)[1]+close(period=”DAY”)[1])/3;
+
+plot r1 = if ShowTodayOnly and !Today then Double.NaN else (pivot*2) - low(period=”DAY”)[1];
+plot r2 = if ShowTodayOnly and !Today then Double.NaN else pivot + (high(period=”DAY”)[1] - low(period=”DAY”)[1]);
+plot s1 = if ShowTodayOnly and !Today then Double.NaN else (pivot*2) - high(period=”DAY”)[1];
+plot s2 = if ShowTodayOnly and !Today then Double.NaN else  pivot - (high(period=”DAY”)[1] - low(period=”DAY”)[1]);
+
+#plot DailyOpen = if ShowTodayOnly and !Today then Double.NaN else open(period=”DAY”)[1];
+
+#DailyClose.SetDefaultColor(Color.WHITE);
+#DailyClose.SetPaintingStrategy(PaintingStrategy.LINE);
+#DailyClose.setStyle(curve.SHORT_Dash);
+#DailyClose.SetLineWeight(1);
+
+pivot.SetDefaultColor(Color.Gray);
+pivot.SetPaintingStrategy(PaintingStrategy.LINE);
+pivot.setStyle(curve.points);
+pivot.SetLineWeight(1);
+
+r1.SetDefaultColor(Color.Dark_Orange);
+r1.SetPaintingStrategy(PaintingStrategy.LINE);
+r1.setStyle(curve.points);
+r1.SetLineWeight(1);
+
+r2.SetDefaultColor(Color.Red);
+r2.SetPaintingStrategy(PaintingStrategy.LINE);
+r2.setStyle(curve.points);
+r2.SetLineWeight(1);
+
+s1.SetDefaultColor(Color.CYAN);
+s1.SetPaintingStrategy(PaintingStrategy.LINE);
+s1.setStyle(curve.points);
+s1.SetLineWeight(1);
+
+s2.SetDefaultColor(Color.blue);
+s2.SetPaintingStrategy(PaintingStrategy.LINE);
+s2.setStyle(curve.points);
+s2.SetLineWeight(1);
+

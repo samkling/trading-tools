@@ -1,0 +1,29 @@
+#samk_previousday_pivots
+input ShowTodayOnly = yes;
+
+def Today = if GetDay() == GetLastDay() then 1 else 0;
+
+plot DailyClose = if ShowTodayOnly and !Today then Double.NaN else close(period=”DAY”)[1];
+
+plot DailyHigh = if ShowTodayOnly and !Today then Double.NaN else high(period=”DAY”)[1];
+
+plot DailyLow = if ShowTodayOnly and !Today then Double.NaN else low(period=”DAY”)[1];
+
+#plot DailyOpen = if ShowTodayOnly and !Today then Double.NaN else open(period=”DAY”)[1];
+
+DailyClose.SetDefaultColor(Color.white);
+DailyClose.SetPaintingStrategy(PaintingStrategy.LINE);
+DailyClose.setStyle(curve.SHORT_Dash);
+DailyClose.SetLineWeight(2);
+
+DailyHigh.SetDefaultColor(Color.Red);
+DailyHigh.SetPaintingStrategy(PaintingStrategy.LINE);
+DailyHigh.setStyle(curve.SHORT_Dash);
+DailyHigh.SetLineWeight(1);
+
+DailyLow.SetDefaultColor(Color.CYAN);
+DailyLow.SetPaintingStrategy(PaintingStrategy.LINE);
+DailyLow.setStyle(curve.SHORT_Dash);
+DailyLow.SetLineWeight(1);
+
+
