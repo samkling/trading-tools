@@ -1,0 +1,47 @@
+#runner_scan
+#Wizard input: price
+#Wizard percent: is at least
+
+input percent = 30.0;
+
+def chgFromOpen = 100*(high-open)/open;
+plot scan;
+
+scan = chgFromOpen >= percent;
+
+
+#--------------------------------------------------------
+#--------------------------------------------------------
+#--------------------------------------------------------
+
+
+#big_gapper_scan
+#Wizard input: price
+#Wizard percent: is at least
+
+def prevClose = close[1];
+def todayOpen = open[0];
+def percent = 23.0;
+
+def isGapper = (todayOpen-prevClose)/prevClose > .19;
+
+def chgFromOpen = 100*(high-open)/open;
+plot scan;
+
+scan = chgFromOpen >= percent and isGapper;
+
+
+#--------------------------------------------------------
+#--------------------------------------------------------
+#--------------------------------------------------------
+
+#big_runner_scan
+#Wizard input: price
+#Wizard percent: is at least
+
+def percent = 50.0;
+
+def chgFromOpen = 100*(high-open)/open;
+plot scan;
+
+scan = chgFromOpen >= percent;
