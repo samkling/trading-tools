@@ -7,6 +7,7 @@ input gapper_threshold = 19;
 input smallcap_threshold = 16;
 input runner_threshold = 30;
 
+def risk = 10.55;
 def openToday = open(period = "Day")[0];
 def prevClose = close(period = "Day")[1];
 def highToday = high(period = "Day")[0];
@@ -15,26 +16,37 @@ def isRunner = ((highToday-openToday)/openToday) > (runner_threshold/100);
 def isSmallCap = (openToday < smallcap_threshold) or isRunner;
 def isGapper = ((openToday-prevClose)/prevClose) > (gapper_threshold/100) and (openToday > 1);
 
-input upper_25 = 9;
-input upper_median = 23;
-input upper_75 = 46;
-input upper_90 = 75;
-input upper_90_run = 105;
+def upper_25_gap = 9;
+def upper_median_gap = 23;
+def upper_75_gap = 43;
+def upper_90_gap = 66;
 
-input lower_median = 30;
-input lower_75 = 39;
+def upper_25_run = 36;
+def upper_median_run = 48;
+def upper_75_run = 75;
+def upper_90_run = 104;
 
-def targ_median = if isSmallCap and !isGapper then 23 else lower_median;
-def targ_75 = if isSmallCap and !isGapper then 30 else lower_75;
+def lower_median_gap = 30;
+def lower_75_gap = 38;
 
-AddLabel(yes, "HOD: " + stopDist, Color.light_Gray);
+def lower_median_run = 24;
+def lower_75_run = 30;
+
+def upper_25 = if isSmallCap and !isGapper then upper_25_run else upper_25_gap;
+def upper_median = if isSmallCap and !isGapper then upper_median_run else upper_median_gap;
+def upper_75 = if isSmallCap and !isGapper then upper_75_run else upper_75_gap;
+def upper_90 = if isSmallCap and !isGapper then upper_90_run else upper_90_gap;
+
+def targ_median = if isSmallCap and !isGapper then lower_median_run else lower_median_gap;
+def targ_75 = if isSmallCap and !isGapper then lower_75_run else lower_75_gap;
+
+AddLabel(yes, "Shs: " + round(risk/stopDist,1), Color.light_Gray);
 AddLabel(isGapper, "Gapper", Color.Green);
 AddLabel(isRunner, "Runner", Color.Light_green);
-AddLabel(isSmallCap and isGapper, "R25: " + upper_25 + " %", Color.light_gray);
-AddLabel(isSmallCap and isGapper, "R50: " + upper_median + " %", Color.ORANGE);
+AddLabel(isSmallCap, "R25: " + upper_25 + " %", Color.light_gray);
+AddLabel(isSmallCap, "R50: " + upper_median + " %", Color.ORANGE);
 AddLabel(isSmallCap, "R75: " + upper_75 + " %", Color.DARK_ORANGE);
 AddLabel(isSmallCap, "R90: " + upper_90 + " %", Color.LIGHT_RED);
-AddLabel(isSmallCap and !isGapper, "Run90: " + upper_90_run + " %", Color.RED);
 
 AddLabel(isSmallCap, "T50: -" + (targ_median) + " %", Color.VIOLET);
 AddLabel(isSmallCap, "T75: -" + (targ_75) + " %", Color.MAGENTA);
@@ -42,15 +54,13 @@ AddLabel(isSmallCap, "T75: -" + (targ_75) + " %", Color.MAGENTA);
 def Today = if GetDay() == GetLastDay() then 1 else 0;
 
 
-plot High_25 = if (ShowTodayOnly and !Today) or !isGapper then Double.NaN else openToday * (upper_25 / 100 + 1);
+plot High_25 = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_25 / 100 + 1);
 
-plot High_Median = if (ShowTodayOnly and !Today) or !isGapper then Double.NaN else openToday * (upper_median / 100 + 1);
+plot High_Median = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_median / 100 + 1);
 
 plot High_75th_percentile = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_75 / 100 + 1);
 
 plot High_90th_percentile = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_90 / 100 + 1);
-
-plot High_90th_percentile_run = if (ShowTodayOnly and !Today) or isGapper then Double.NaN else openToday * (upper_90_run / 100 + 1);
 
 plot Target_Median = if ShowTodayOnly and !Today then Double.NaN else highToday * (1 - targ_median / 100);
 
@@ -80,11 +90,6 @@ High_90th_percentile.SetDefaultColor(Color.LIGHT_RED);
 High_90th_percentile.SetPaintingStrategy(PaintingStrategy.LINE);
 High_90th_percentile.SetStyle(Curve.FIRM);
 High_90th_percentile.SetLineWeight(1);
-
-High_90th_percentile_run.SetDefaultColor(Color.RED);
-High_90th_percentile_run.SetPaintingStrategy(PaintingStrategy.LINE);
-High_90th_percentile_run.SetStyle(Curve.FIRM);
-High_90th_percentile_run.SetLineWeight(1);
 
 Target_Median.SetDefaultColor(Color.VIOLET);
 Target_Median.SetPaintingStrategy(PaintingStrategy.LINE);
