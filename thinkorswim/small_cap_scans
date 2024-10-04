@@ -1,3 +1,5 @@
+#----------------Runners--------------------------
+
 #runner_scan
 #Wizard input: price
 #Wizard percent: is at least
@@ -9,13 +11,27 @@ plot scan;
 
 scan = chgFromOpen >= percent;
 
+#--------------------------------------------------------
+#----------------Gappers---------------------------------
+
+#gapper_scan
+#Wizard input: price
+#Wizard percent: is at least
+
+
+def prevClose = close[1];
+def todayOpen = open[0];
+
+def isGapper = (todayOpen-prevClose)/prevClose > .19;
+
+plot scan;
+
+scan = isGapper;
 
 #--------------------------------------------------------
-#--------------------------------------------------------
-#--------------------------------------------------------
+#----------------Gapper Triggers-------------------------
 
-
-#big_gapper_scan
+#gapper_trigger_scan
 #Wizard input: price
 #Wizard percent: is at least
 
@@ -30,10 +46,8 @@ plot scan;
 
 scan = chgFromOpen >= percent and isGapper;
 
-
 #--------------------------------------------------------
-#--------------------------------------------------------
-#--------------------------------------------------------
+#----------------Runner Triggers-------------------------
 
 #big_runner_scan
 #Wizard input: price
@@ -45,3 +59,20 @@ def chgFromOpen = 100*(high-open)/open;
 plot scan;
 
 scan = chgFromOpen >= percent;
+
+#--------------------------------------------------------
+#----------------Big Movers Triggers---------------------
+
+#big_movers
+def prevClose = close[1];
+def todayOpen = open[0];
+def isGapper = (todayOpen-prevClose)/prevClose > .19;
+def chgFromOpen = 100*(high-open)/open;
+
+def runner_threshold = 75;
+def gapper_threshold = 45;
+
+plot scan;
+scan = (chgFromOpen >= runner_threshold) or (isGapper and (chgFromOpen >= gapper_threshold));
+
+
