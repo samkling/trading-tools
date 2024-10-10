@@ -15,14 +15,17 @@ scan = chgFromOpen >= percent;
 #----------------Gappers---------------------------------
 
 #gapper_scan
-#Wizard input: price
-#Wizard percent: is at least
-
 
 def prevClose = close[1];
 def todayOpen = open[0];
+def gapperThreshold = .19;
+def pennyThreshold = .5;
+def isAboveDollar = (open > 1) and (open < 16);
 
-def isGapper = (todayOpen-prevClose)/prevClose > .19;
+## gapper
+def gapPercent = (todayOpen-prevClose)/prevClose;
+
+def isGapper = (gapPercent > pennyThreshold) or (gapPercent > gapperThreshold and isAboveDollar);
 
 plot scan;
 
@@ -32,16 +35,22 @@ scan = isGapper;
 #----------------Gapper Triggers-------------------------
 
 #gapper_trigger_scan
-#Wizard input: price
-#Wizard percent: is at least
+
 
 def prevClose = close[1];
 def todayOpen = open[0];
-def percent = 23.0;
+def percent = .23;
+def gapperThreshold = .19;
+def pennyThreshold = .5;
+def isAboveDollar = (open > 1) and (open < 16);
 
-def isGapper = (todayOpen-prevClose)/prevClose > .19;
+## gapper
+def gapPercent = (todayOpen-prevClose)/prevClose;
 
-def chgFromOpen = 100*(high-open)/open;
+def isGapper = (gapPercent > pennyThreshold) or (gapPercent > gapperThreshold and isAboveDollar);
+
+
+def chgFromOpen = (high-open)/open;
 plot scan;
 
 scan = chgFromOpen >= percent and isGapper;
