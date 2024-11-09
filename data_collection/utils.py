@@ -2,7 +2,7 @@ from datetime import datetime
 from PolygonTickerData import PolygonTickerData
 import os
 import pytz
-import properties as p
+from Properties import properties as p
 import requests
 import time
 
