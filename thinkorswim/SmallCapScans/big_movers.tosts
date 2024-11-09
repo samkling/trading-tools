@@ -1,0 +1,17 @@
+# scan in: All Listed Stocks
+# volume > 300k
+# high > $1.2
+# custom study with aggregation D
+
+#big movers
+
+def prevClose = close[1];
+def todayOpen = open[0];
+def isGapper = (todayOpen-prevClose)/prevClose > .19;
+def chgFromOpen = 100*(high-open)/open;
+
+def runner_threshold = 75;
+def gapper_threshold = 40;
+
+plot scan;
+scan = (chgFromOpen >= runner_threshold) or (isGapper and (chgFromOpen >= gapper_threshold));
