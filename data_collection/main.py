@@ -1,33 +1,10 @@
 import utils as u
+import runParams as p
+
+def main():
+    u.gather_data(p.TRADE_DATE, p.TICKERS)
+    u.print_time_completed()
 
 if __name__ == '__main__':
-    date = "10/24/2024"
-    tickers = """
-    CTNT
-TRIB
-PCT
-CMAX
-CLIK
-OPTX
-VCNX
-TWG
-ALGS
-NUKK
-ZCAR
-QNCX
-LQR
-NXL
-ATGL
-UPXI
-EFSH
-TCBP
-MNPR
-TVGN
-ZENA
-CCTG
-NXU
-LGCB
-    """.split()
+    main()
 
-    u.gather_data(date, tickers)
-    u.print_time_completed()
