@@ -1,0 +1,9 @@
+# Scan in <watchlist>
+
+#FL_trigger_scan
+def percent = .17;
+
+def chgFromOpen = (high-open)/open;
+plot scan;
+
+scan = chgFromOpen >= percent;
