@@ -1,0 +1,23 @@
+# scan in: All Listed Stocks
+# volume > 300k
+# custom study with aggregation D
+
+#gapper_trigger
+
+def prevClose = close[1];
+def todayOpen = open[0];
+def percent = .17; #chgfromopen
+def gapperThreshold = .19; #gap 
+def pennyThreshold = .5; #penny gap
+def isAboveDollar = (open > 1) and (open < 16);
+def pennyPrice = high[0] > .49;
+
+## gapper
+def gapPercent = (todayOpen-prevClose)/prevClose;
+
+def isGapper = ((gapPercent > pennyThreshold) and pennyPrice) or (gapPercent > gapperThreshold and isAboveDollar);
+
+def chgFromOpen = (high-open)/open;
+
+plot scan;
+scan = (chgFromOpen >= percent) and isGapper;
