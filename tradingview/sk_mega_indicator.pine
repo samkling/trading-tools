@@ -20,7 +20,8 @@ only20ema = input.bool(false, "Only 20ema", group = displayIndicators, inline = 
 excludeDailyIntraday = input.bool(true, "Exclude Daily Intraday", group = dmas_group, inline = "row2")
 showBB_SP = input.bool(false, "Show BB SP", group = indicators, inline = "row1") and timeframe.isdaily
 showADR = input.bool(true, "Show ADR", group = indicators, inline = "row1") and (timeframe.isdaily or timeframe.isweekly)
-screenshot = input.bool(false, "Screenshot", group = indicators, inline = "row1") and (timeframe.isdaily or timeframe.isweekly)
+screenshot = input.bool(false, "Screenshot", group = indicators, inline = "row1") and (timeframe.isdaily or timeframe.isweekly or timeframe.ismonthly)
+p_color_input = input.bool(true,"Dark Pivots?", group = displayIndicators, inline = "row3")
 
 showMAs = input.bool(true, "Show MAs All TF", group = allMas_group, inline = "50_200") and (not only20ema) and (not showBB_SP)
 showDMAs = input.bool(false, "Show Daily MAs", group = dmas_group, inline = "row2") and (timeframe.isintraday or (not showMAs and timeframe.isdaily)) and (not only20ema) and (not excludeDailyIntraday) and (not showBB_SP)
@@ -139,7 +140,7 @@ plot(showBB_SP ? lower_2 : na, "Upper_2", color=color.gray, offset = offset)
 
 
 // We use `var` to only initialize the table on the first bar.
-var table atrDisplay = table.new(position.top_right,2,2)
+var table atrDisplay = table.new(position.top_right,3,2)
 // We call `ta.atr()` outside the `if` block so it executes on each bar.
 // myAtr = math.round((ta.atr(14) / close)* 1000)/10
 Length = (20)
@@ -148,13 +149,20 @@ dlow = request.security(syminfo.tickerid, "D", low)
 myAtr = 100 * (ta.sma(dhigh / dlow, Length) - 1)
 avgVol = ma(volume, 50, "SMA")
 rVol = volume/avgVol
+myAtr2 = ta.atr(14)
+
+ndPivot = (high+low+close) / 3
+ndR1 = (ndPivot * 2) - low
+
 if barstate.islast and showADR
     // We only populate the table on the last bar.
-    table.cell(atrDisplay, 1, 1, "ADR: " + str.tostring(myAtr,"0.00") + "%",text_color = myAtr > 3.4 ? color.lime : color.red)
+    table.cell(atrDisplay, 2, 1, "ADR: " + str.tostring(myAtr,"0.00") + "%",text_color = myAtr > 3.4 ? color.lime : color.red)
 if showADR
-    table.cell(atrDisplay, 0, 0, "V: " + str.tostring(volume/1000000,"0.00") + "m",text_color = close > close[1] ? color.lime : color.red)
-    table.cell(atrDisplay, 1, 0, "VAv: " + str.tostring(avgVol/1000000,"0.00") + "m",text_color = color.yellow)
-    table.cell(atrDisplay, 0, 1, "Rv: " + str.tostring(rVol,"0.0"),text_color = rVol > 1 ? color.lime : color.gray)
+    table.cell(atrDisplay, 1, 0, "V: " + str.tostring(volume/1000000,"0.00") + "m",text_color = close > close[1] ? color.lime : color.red)
+    table.cell(atrDisplay, 2, 0, "VAv: " + str.tostring(avgVol/1000000,"0.00") + "m",text_color = color.yellow)
+    // table.cell(atrDisplay, 1, 1, "Rv: " + str.tostring(rVol,"0.0"),text_color = rVol > 1 ? color.lime : p_color_input ? color.gray : color.rgb(77, 79, 84))
+    table.cell(atrDisplay, 1, 1, "nR1: " + str.tostring(ndR1,"0.00"),text_color = color.orange)
+    table.cell(atrDisplay, 0,0, "ATR: " + str.tostring(myAtr2, "0.00"))
 
 // yourmama = input.string(title='', options=['SMA', 'EMA'], defval='SMA', group='Moving Averages Type')
 
@@ -201,7 +209,7 @@ TRADITIONAL = "Traditional"
 kind = TRADITIONAL
 pivot_time_frame = DAILY
 showPivots = input.bool(true,"Show Pivots -", group = displayIndicators, inline = "row3") and timeframe.isminutes
-look_back = input.int(title="# of days", defval=1, minval=1, maxval=5000, group = displayIndicators, inline = "row3")
+look_back = input.int(title="# of days", defval=100, minval=1, maxval=5000, group = displayIndicators, inline = "row3")
 is_daily_based = true
 show_labels = false
 show_prices = false
@@ -216,7 +224,8 @@ ppThickness = 3
 var DEF_COLOR = #FB8C00
 var arr_time = array.new_int()
 var p = array.new_float()
-p_color = color.gray
+// p_color_input = input.bool(true,"Dark Pivots?", group = displayIndicators, inline = "row3")
+p_color = p_color_input ? color.gray : color.rgb(77, 79, 84)
 p_show = true
 var r1 = array.new_float()
 var s1 = array.new_float()
@@ -307,10 +316,10 @@ calc_OHLC_for_pivot(custom_years_divisor) =>
         var curr_sec_low = float(na)
         var curr_sec_close = float(na)
         if year(time_close) % custom_years_divisor == 0
-            curr_sec_open := open
-            curr_sec_high := high
-            curr_sec_low := low
-            curr_sec_close := close
+        	curr_sec_open := open
+			curr_sec_high := high
+			curr_sec_low := low
+			curr_sec_close := close
             prev_sec_high := high[1]
             prev_sec_low := low[1]
             prev_sec_close := close[1]
@@ -328,11 +337,12 @@ sec_open_gaps_on = request.security(syminfo.tickerid, resolution, open, gaps = b
 
 if showPivots
     is_change_years = false
+    // is_change_years = custom_years_divisor > 0 and ta.change(time(resolution)) != 0 and year(time_close) % custom_years_divisor == 0
 
     var is_change = false
     var uses_current_bar = false
     var change_time = int(na)
-    is_time_change = false //(ta.change(time(resolution)) and custom_years_divisor == SIMPLE_DIVISOR) or is_change_years
+    is_time_change = false
     if is_time_change
         change_time := time
 
@@ -452,4 +462,5 @@ if showPivots
             if array.size(s2) > 0 and s2_show
                 draw_line(i, s2, s2_color)
                 draw_label(i, array.get(s2, i), "S2", s2_color)
+
 
