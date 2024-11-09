@@ -2,3 +2,6 @@
 /.idea
 /DAS_Web/.idea
 /DAS_Web/__pycache__
+/data_collection/__pycache__
+/data_collection/Model/__pycache__
+/data_collection/Resource/__pycache__
