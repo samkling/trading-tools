@@ -1,4 +1,4 @@
-import utils as u
+from Resource import utils as u
 import runParams as p
 
 def main():

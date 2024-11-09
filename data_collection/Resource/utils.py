@@ -1,8 +1,8 @@
 from datetime import datetime
-from PolygonTickerData import PolygonTickerData
+from Model.PolygonTickerData import PolygonTickerData
 import os
 import pytz
-from Properties import properties as p
+from Resource import properties as p
 import requests
 import time
 
