@@ -1,0 +1,14 @@
+# scan in: All Listed Stocks
+# volume > 300k
+# high > $1.20
+# custom study aggregation D
+
+#runner_scan
+
+input price = HIGH;
+input percent = .3;
+
+def chgFromOpen = (high-open)/open;
+plot scan;
+
+scan = chgFromOpen >= percent;
