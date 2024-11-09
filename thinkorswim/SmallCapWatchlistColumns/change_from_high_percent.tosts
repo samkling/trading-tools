@@ -1,0 +1,2 @@
+plot change_from_high = round(((close - high)/high)*100);
+assignBackgroundColor(if change_from_high > 0 then Color.dark_GREEN else if change_from_high < -15 then Color.dark_red else Color.dark_gray);

@@ -1,0 +1,2 @@
+plot change_to_high = round(((high - open)/open)*100);
+assignBackgroundColor(if change_to_high > 49 then color.blue else if change_to_high > 17.2 then Color.dark_GREEN else if change_to_high > 10 then Color.dark_gray else color.dark_red);

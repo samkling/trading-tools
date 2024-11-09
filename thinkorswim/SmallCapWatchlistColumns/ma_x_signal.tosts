@@ -1,0 +1,4 @@
+#this needs aggregation 1m w/ ext
+def isEntrySignal = MovingAvgCrossover("length1" = 6, "length2" = 20, "average type1" = "EXPONENTIAL", "average type2" = "EXPONENTIAL", "crossing type" = "below") is true within 5 bars;
+plot scan = if isEntrySignal then 1 else 0;
+assignBackgroundColor(if isEntrySignal then Color.dark_GREEN else Color.black);

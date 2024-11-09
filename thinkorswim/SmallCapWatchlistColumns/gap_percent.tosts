@@ -1,0 +1,2 @@
+plot gap_percent = round(((open - close[1])/close[1])*100);
+assignBackgroundColor(if gap_percent > 100 then Color.dark_GREEN else if gap_percent > 50 then Color.dark_gray else Color.black);
