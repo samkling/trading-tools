@@ -1,0 +1,1 @@
+This directory holds logged ticker data paste-able to google sheets.
