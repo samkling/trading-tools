@@ -8,10 +8,13 @@ input penny_gapper_threshold = 50;
 input smallcap_threshold = 16;
 input runner_threshold = 30;
 
-def risk = 9.93;
+def risk = 10.37;
 
 def openToday = open(period = "Day")[0];
 def prevClose = close(period = "Day")[1];
+def ssrClose = close(period = "Day")[2];
+def ssrLow = low(period = "Day")[1];
+def isSSR = (((ssrLow-ssrClose)/ssrClose) *-1) > .099;
 def highToday = high(period = "Day")[0];
 def stopDist = high(period = "Day")[0]- close(period = "Day")[0];
 def isRunner = ((highToday-openToday)/openToday) > (runner_threshold/100);
@@ -20,21 +23,21 @@ def isDollarGapper = ((openToday-prevClose)/prevClose) > (gapper_threshold/100) 
 def isPennyGapper = ((openToday-prevClose)/prevClose) > (penny_gapper_threshold/100);
 def isGapper = isDollarGapper or isPennyGapper;
 
-def upper_25_gap = 8;
-def upper_median_gap = 19;
-def upper_75_gap = 41;
-def upper_90_gap = 66;
+def upper_25_gap = 7.9;
+def upper_median_gap = 17.2;
+def upper_75_gap = 39.8;
+def upper_90_gap = 67.8;
 
-def upper_25_run = 37;
+def upper_25_run = 36;
 def upper_median_run = 49;
 def upper_75_run = 76;
-def upper_90_run = 111;
+def upper_90_run = 140;
 
-def lower_median_gap = 28;
-def lower_75_gap = 37;
+def lower_median_gap = 29;
+def lower_75_gap = 39;
 
-def lower_median_run = 23;
-def lower_75_run = 30;
+def lower_median_run = 24;
+def lower_75_run = 33;
 
 def upper_25 = if isSmallCap and !isGapper then upper_25_run else upper_25_gap;
 def upper_median = if isSmallCap and !isGapper then upper_median_run else upper_median_gap;
@@ -45,6 +48,7 @@ def targ_median = if isSmallCap and !isGapper then lower_median_run else lower_m
 def targ_75 = if isSmallCap and !isGapper then lower_75_run else lower_75_gap;
 
 AddLabel(yes, "Shrs: " + round(risk/stopDist,1), Color.light_Gray);
+AddLabel(isSSR, "SSR", Color.light_gray);
 AddLabel(isGapper, "Gapper", Color.Green);
 AddLabel(isRunner, "Runner", Color.Light_green);
 AddLabel(isSmallCap, "R25: " + upper_25 + " %", Color.light_gray);
