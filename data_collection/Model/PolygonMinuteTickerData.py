@@ -6,12 +6,13 @@ in the form of:
     Results
     Post High Low
 """
-class PolygonTickerData:
+class PolygonMinuteTickerData:
     def __init__(self, data):
         self.ticker = data["ticker"]
         self.results_count = data["resultsCount"]
         self.results = data["results"]
         self.post_high_low = -1
+        self.find_post_high_low()
 
     def print_summary(self):
         print(self.ticker)
