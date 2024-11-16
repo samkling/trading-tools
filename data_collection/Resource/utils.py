@@ -1,12 +1,13 @@
+from Model.DasWebFormatter import DasWebFormatter
 from Model.PolygonApi import PolygonApi
 from Model.PolygonDailyTickerData import PolygonDailyTickerData
 from Model.PolygonMinuteTickerData import PolygonMinuteTickerData
 from Model.PolygonTickerDetailsData import PolygonTickerDetailsData
 
 from datetime import datetime
-import os
 import pytz
 from Resource import properties as p
+import runParams as rp
 
 MARKET_OPEN = " 09:30:00"
 MARKET_CLOSE = " 16:00:00"
@@ -30,14 +31,12 @@ def build_minute_bars_request_url(date, ticker):
     return url
 
 def build_daily_bar_request_url(date, ticker):
-    return f"https://api.polygon.io/v1/open-close/{ticker.upper()}/{format_polygon_date(date)}?adjusted=true&apiKey={p.API_KEY}"
+    return (f"https://api.polygon.io/v1/open-close/{ticker.upper()}/{format_polygon_date(date)}"
+            f"?adjusted=true&apiKey={p.API_KEY}")
 
 def build_ticker_details_request_url(date, ticker):
-    return f"https://api.polygon.io/v3/reference/tickers/{ticker.upper()}?date={format_polygon_date(date)}&apiKey={p.API_KEY}"
-
-def data_file_exists(file_name):
-    file_path = f"TickerData/{file_name}.txt"
-    return os.path.exists(file_path)
+    return (f"https://api.polygon.io/v3/reference/tickers/{ticker.upper()}?date={format_polygon_date(date)}"
+            f"&apiKey={p.API_KEY}")
 
 def write_data_to_file(file_name, data_string):
     with open(file_name, "a") as file:
@@ -59,30 +58,48 @@ def build_data_file_string(date, ticker, minute_data, daily_data, previous_daily
 
 def process_data(date, previous_date, tickers):
     polygon = PolygonApi()
+    process_errors = 0
+    error_tickers = []
     for ticker in tickers:
         ticker = ticker.upper()
         file_name = create_file_name(date, ticker)
+        try:
+            minute_bar_data = polygon.get_minute_bars(date, ticker)
+            daily_bar_data = polygon.get_daily_bar_data(date, ticker)
+            previous_daily_bar_data = polygon.get_daily_bar_data(previous_date, ticker)
+            ticker_details_response_data = polygon.get_ticker_details_data(date, ticker)
 
-        minute_bar_data = polygon.get_minute_bars(date, ticker)
-        daily_bar_data = polygon.get_daily_bar_data(date, ticker)
-        previous_daily_bar_data = polygon.get_daily_bar_data(previous_date, ticker)
-        ticker_details_response_data = polygon.get_ticker_details_data(date,ticker)
+            data_list = [minute_bar_data, daily_bar_data, previous_daily_bar_data, ticker_details_response_data]
+            if None in data_list:
+                print(data_list)
+                print("no api data")
+                raise Exception
 
-        data_list = [minute_bar_data, daily_bar_data, previous_daily_bar_data, ticker_details_response_data]
-        if None in data_list:
-            print(data_list)
-            print("no data")
-            return
+            minute_ticker_data = PolygonMinuteTickerData(minute_bar_data)
+            daily_ticker_data = PolygonDailyTickerData(daily_bar_data)
+            previous_daily_ticker_data = PolygonDailyTickerData(previous_daily_bar_data)
+            ticker_details_data = PolygonTickerDetailsData(ticker_details_response_data)
 
-        minute_ticker_data = PolygonMinuteTickerData(minute_bar_data)
-        daily_ticker_data = PolygonDailyTickerData(daily_bar_data)
-        previous_daily_ticker_data = PolygonDailyTickerData(previous_daily_bar_data)
-        ticker_details_data = PolygonTickerDetailsData(ticker_details_response_data)
+            data_file_string = build_data_file_string(date, ticker, minute_ticker_data, daily_ticker_data,
+                                                      previous_daily_ticker_data, ticker_details_data)
+            write_data_to_file(file_name, data_file_string)
+        except Exception as e:
+            process_errors += 1
+            error_tickers.append(ticker)
+            print(f"Error for ticker {ticker}. Please check \n{e}")
+    return process_errors, error_tickers
 
-        data_file_string = build_data_file_string(date, ticker, minute_ticker_data, daily_ticker_data, previous_daily_ticker_data, ticker_details_data)
-        write_data_to_file(file_name, data_file_string)
+def run_small_cap_data_collection():
+    process_errors, error_tickers = process_data(rp.TRADE_DATE, rp.PREVIOUS_DATE, rp.TICKERS)
+    print_time_completed(process_errors, error_tickers)
 
-def print_time_completed():
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%I:%M:%S %p")
-    print("\n*** Time Completed: ", formatted_time)
+def run_tradervue_import():
+    DasWebFormatter(rp.DAS_HISTORY)
+    print_time_completed()
+
+def print_time_completed(process_errors=None, tickers=None):
+    current_time = datetime.now().strftime("%I:%M:%S %p")
+    if None not in [process_errors, tickers]:
+        print(f"\nErrors encountered: {process_errors}")
+        print(tickers)
+    print(f"\n*** Time Completed: {current_time}")
