@@ -1,0 +1,36 @@
+# Inputs for customization
+input buyTime = 0930; # Time in HHMM format
+input buyPrice = 1.50; # Target price
+
+# Convert time to number of seconds since midnight
+def secondsSinceMidnight = SecondsFromTime(0);
+def modResult = buyTime - Floor(buyTime / 100) * 100;
+def targetSeconds = floor(buyTime / 100) * 3600 + modResult * 60;
+
+# Condition to check if current time matches the target time
+def isTargetTime = (secondsSinceMidnight == targetSeconds);
+
+# Plot the point at the target time and price
+plot point = if isTargetTime then buyPrice else Double.NaN;
+point.SetPaintingStrategy(PaintingStrategy.arrow_up);
+point.SetDefaultColor(Color.Green);
+point.SetLineWeight(5); # Makes the point more visible
+
+
+
+# Inputs for customization
+input sellTime = 1030; # Time in HHMM format
+input sellPrice = 1.50; # Target price
+
+# Convert time to number of seconds since midnight
+def modResult_sell = sellTime - Floor(sellTime / 100) * 100;
+def targetSeconds_sell = floor(sellTime / 100) * 3600 + modResult_sell * 60;
+
+# Condition to check if current time matches the target time
+def isTargetTime_sell = (secondsSinceMidnight == targetSeconds_sell);
+
+# Plot the point at the target time and price
+plot point_sell = if isTargetTime_sell then sellPrice else Double.NaN;
+point_sell.SetPaintingStrategy(PaintingStrategy.arrow_down);
+point_sell.SetDefaultColor(Color.RED);
+point_sell.SetLineWeight(5); # Makes the point more visible
