@@ -1,6 +1,6 @@
 from datetime import datetime
 
-class DasWebFormatter:
+class DasWebTraderVueFormatter:
     def __init__(self, data):
         self.data = data.split('\n')
         self.file_name = ""

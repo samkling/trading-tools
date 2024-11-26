@@ -1,4 +1,4 @@
-from Model.DasWebFormatter import DasWebFormatter
+from Model.DasWebTraderVueFormatter import DasWebTraderVueFormatter
 from Model.PolygonApi import PolygonApi
 from Model.PolygonDailyTickerData import PolygonDailyTickerData
 from Model.PolygonMinuteTickerData import PolygonMinuteTickerData
@@ -94,7 +94,7 @@ def run_small_cap_data_collection():
     print_time_completed(process_errors, error_tickers)
 
 def run_tradervue_import():
-    DasWebFormatter(rp.DAS_HISTORY)
+    DasWebTraderVueFormatter(rp.DAS_HISTORY)
     print_time_completed()
 
 def print_time_completed(process_errors=None, tickers=None):
