@@ -5,3 +5,5 @@
 /data_collection/__pycache__
 /data_collection/Model/__pycache__
 /data_collection/Resource/__pycache__
+.DS_Store
+*.csv

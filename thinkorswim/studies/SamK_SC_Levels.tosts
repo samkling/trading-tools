@@ -1,6 +1,8 @@
 #SamK_SC_Levels
 declare upper;
 
+input risk = 11.18;
+
 input ShowTodayOnly = yes;
 input ShowColorChange = no;
 input gapper_threshold = 19;
@@ -8,36 +10,34 @@ input penny_gapper_threshold = 50;
 input smallcap_threshold = 16;
 input runner_threshold = 30;
 
-def risk = 10.37;
-
 def openToday = open(period = "Day")[0];
 def prevClose = close(period = "Day")[1];
 def ssrClose = close(period = "Day")[2];
 def ssrLow = low(period = "Day")[1];
 def isSSR = (((ssrLow-ssrClose)/ssrClose) *-1) > .099;
 def highToday = high(period = "Day")[0];
-def stopDist = high(period = "Day")[0]- close(period = "Day")[0];
+def closeToday = close(period = "Day")[0];
 def isRunner = ((highToday-openToday)/openToday) > (runner_threshold/100);
 def isSmallCap = (openToday < smallcap_threshold) or isRunner;
 def isDollarGapper = ((openToday-prevClose)/prevClose) > (gapper_threshold/100) and (openToday > 1);
 def isPennyGapper = ((openToday-prevClose)/prevClose) > (penny_gapper_threshold/100);
 def isGapper = isDollarGapper or isPennyGapper;
 
-def upper_25_gap = 7.9;
-def upper_median_gap = 17.2;
-def upper_75_gap = 39.8;
-def upper_90_gap = 67.8;
+def upper_25_gap = 7.7;
+def upper_median_gap = 17.4;
+def upper_75_gap = 39.9;
+def upper_90_gap = 70;
 
 def upper_25_run = 36;
 def upper_median_run = 49;
-def upper_75_run = 76;
-def upper_90_run = 140;
+def upper_75_run = 75;
+def upper_90_run = 128;
 
-def lower_median_gap = 29;
-def lower_75_gap = 39;
+def lower_median_gap = 30.2;
+def lower_75_gap = 39.7;
 
-def lower_median_run = 24;
-def lower_75_run = 33;
+def lower_median_run = 23.4;
+def lower_75_run = 32.7;
 
 def upper_25 = if isSmallCap and !isGapper then upper_25_run else upper_25_gap;
 def upper_median = if isSmallCap and !isGapper then upper_median_run else upper_median_gap;
@@ -46,6 +46,8 @@ def upper_90 = if isSmallCap and !isGapper then upper_90_run else upper_90_gap;
 
 def targ_median = if isSmallCap and !isGapper then lower_median_run else lower_median_gap;
 def targ_75 = if isSmallCap and !isGapper then lower_75_run else lower_75_gap;
+
+def stopDist = if isSmallCap and (highToday > upper_median) then highToday - closeToday else upper_median - closeToday;
 
 AddLabel(yes, "Shrs: " + round(risk/stopDist,1), Color.light_Gray);
 AddLabel(isSSR, "SSR", Color.light_gray);
@@ -61,17 +63,11 @@ AddLabel(isSmallCap, "T75: -" + (targ_75) + " %", Color.MAGENTA);
 
 def Today = if GetDay() == GetLastDay() then 1 else 0;
 
-
 plot High_25 = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_25 / 100 + 1);
-
 plot High_Median = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_median / 100 + 1);
-
 plot High_75th_percentile = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_75 / 100 + 1);
-
 plot High_90th_percentile = if ShowTodayOnly and !Today then Double.NaN else openToday * (upper_90 / 100 + 1);
-
 plot Target_Median = if ShowTodayOnly and !Today then Double.NaN else highToday * (1 - targ_median / 100);
-
 plot Target_75th_percentile = if ShowTodayOnly and !Today then Double.NaN else highToday * (1 - targ_75 / 100);
 
 def highAbove25 = highToday > High_25;
