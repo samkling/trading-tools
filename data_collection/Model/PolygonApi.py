@@ -15,7 +15,7 @@ class PolygonApi:
     def make_api_call(self):
         if (self.call_count % 5 == 0) and (self.call_count != 0):
             print(f"API Call Limit Timeout - {datetime.now().strftime('%I:%M:%S %p')}")
-            time.sleep(60)
+            time.sleep(61)
             print(f"Resumed - {datetime.now().strftime('%I:%M:%S %p')}")
         self.call_count += 1
 
