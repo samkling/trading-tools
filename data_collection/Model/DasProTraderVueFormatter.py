@@ -9,10 +9,10 @@ class DasProTraderVueFormatter:
         self.create_file()
 
     def create_file(self):
-        self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side")
+        self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side,Commission,ECNFee")
         today_date = datetime.today().strftime('%Y-%m-%d') #or manually set date
         for row in self.data:
-            data_string = ','.join([today_date, row[0], row[1], row[2], row[3], row[4]])
+            data_string = ','.join([today_date, row[0], row[1], row[2], row[3], row[4], str(int(row[2])*0.003), row[6]])
             self.write_to_tradervue_file(data_string)
 
     def write_to_tradervue_file(self, data_string):
