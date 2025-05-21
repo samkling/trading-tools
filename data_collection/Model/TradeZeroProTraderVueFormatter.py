@@ -1,31 +1,29 @@
 import time
-
+from Resource.properties import DISCORD_WEBHOOK_URL
 import requests
 from datetime import datetime
-
-WEBHOOK_URL = "https://discord.com/api/webhooks/1361901870536462526/BWXuWZormp__LbnTaNj9Kn26ReYf7_XNE8B7AGxFy_IKbC9mm0SH3E1Dk_Ze6aSdu8eN"
 
 class TradeZeroProTraderVueFormatter:
     def __init__(self, data):
         self.data = data
         self.file_name = ""
-        self.total_pnl = dict()
         self.total_trades = dict()
+        self.tickers = set()
         self.format_data()
         self.create_file_name()
         self.create_file()
-        # self.send_total_pnl()
 
     def send_total_pnl(self):
-        print(self.total_pnl)
-        for ticker, pnl in self.total_pnl.values():
+        print("\nSheets Paste-able")
+        for ticker in self.tickers:
             for trade in self.total_trades[ticker]:
-                self.send_discord_message(",".join(trade))
-            self.send_discord_message(f"{ticker}\t\t{pnl}")
+                # self.send_discord_message("\t ".join(trade))
+                self.write_to_tradervue_file("\t ".join(trade))
 
     def create_file(self):
         discord_split = '\t \t'
-        self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side", "Date,Symbol,QTY,Buy,Sell".replace(',', discord_split))
+        # self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side", "Date,Symbol,QTY,Buy,Sell".replace(',', discord_split))
+        self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side")
         today_date = datetime.today().strftime('%Y-%m-%d') #or manually set date
         for row in self.data:
             entry_data, exit_data = self.transform_data(row, today_date)
@@ -33,6 +31,7 @@ class TradeZeroProTraderVueFormatter:
             exit_string = ','.join(exit_data)
             self.write_to_tradervue_file(entry_string)
             self.write_to_tradervue_file(exit_string)
+        self.send_total_pnl()
 
     def transform_data(self, data, today_date):
         symbol = data[0]
@@ -47,9 +46,10 @@ class TradeZeroProTraderVueFormatter:
         sell = exit_price if entry_side == "B" else entry_price
         entry_data = [today_date, entry_time, symbol, quantity, entry_price, entry_side]
         exit_data = [today_date, exit_time, symbol, quantity, exit_price, exit_side]
-        sheets_data = [today_date, symbol, quantity, buy, sell]
-        self.total_pnl[symbol] = self.total_pnl.get(symbol, 0) + (float(exit_price) - float(entry_price)) * int(quantity)
-        self.total_trades[symbol] = sheets_data
+        sheets_date = datetime.strptime(today_date, "%Y-%m-%d").strftime("%m/%d/%Y")
+        sheets_data = [symbol, sheets_date, sheets_date, "Notes", "Notes", quantity, buy, sell]
+        self.total_trades[symbol] = self.total_trades.get(symbol, []) + [sheets_data]
+        self.tickers.add(symbol)
         return entry_data, exit_data
 
     def write_to_tradervue_file(self, data_string, discord_string=None):
@@ -80,7 +80,7 @@ class TradeZeroProTraderVueFormatter:
         data = {
             "content": content  # plain text message
         }
-        response = requests.post(WEBHOOK_URL, json=data)
+        response = requests.post(DISCORD_WEBHOOK_URL, json=data)
 
         if response.status_code != 204:
             print(f"Failed to send message: {response.status_code}, {response.text}")

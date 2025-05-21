@@ -1,9 +1,7 @@
 import time
-
+from Resource.properties import DISCORD_WEBHOOK_URL
 import requests
 from datetime import datetime
-
-WEBHOOK_URL = "https://discord.com/api/webhooks/1361901870536462526/BWXuWZormp__LbnTaNj9Kn26ReYf7_XNE8B7AGxFy_IKbC9mm0SH3E1Dk_Ze6aSdu8eN"
 
 class DasProTraderVueFormatter:
     def __init__(self, data):
@@ -49,7 +47,7 @@ class DasProTraderVueFormatter:
         data = {
             "content": content  # plain text message
         }
-        response = requests.post(WEBHOOK_URL, json=data)
+        response = requests.post(DISCORD_WEBHOOK_URL, json=data)
 
         if response.status_code != 204:
             print(f"Failed to send message: {response.status_code}, {response.text}")
