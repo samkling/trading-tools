@@ -1,12 +1,15 @@
 from Model.DasWebTraderVueFormatter import DasWebTraderVueFormatter
 from Model.DasProTraderVueFormatter import DasProTraderVueFormatter
+from Model.DayWatchlistData import DayWatchlistData
 from Model.PolygonApi import PolygonApi
 from Model.PolygonDailyTickerData import PolygonDailyTickerData
 from Model.PolygonMinuteTickerData import PolygonMinuteTickerData
 from Model.PolygonTickerDetailsData import PolygonTickerDetailsData
+from Model.TradeZeroProTraderVueFormatter import TradeZeroProTraderVueFormatter
 
 from datetime import datetime
 import pytz
+import time
 
 from Model.ThinkOrSwimWatchlistFormatter import ThinkOrSwimWatchlistFormatter
 from Resource import properties as p
@@ -93,13 +96,19 @@ def process_data(date, previous_date, tickers):
     return process_errors, error_tickers
 
 def run_small_cap_data_collection():
-    tickers = ThinkOrSwimWatchlistFormatter(rp.TICKERS).tickers
-    process_errors, error_tickers = process_data(rp.TRADE_DATE, rp.PREVIOUS_DATE, tickers)
-    print_time_completed(process_errors, error_tickers)
+    for i in range(len(rp.TICKERS_BY_DAY)):
+        day_watchlist_data = DayWatchlistData(rp.TICKERS_BY_DAY[i])
+        tickers = ThinkOrSwimWatchlistFormatter(day_watchlist_data.watchlist).tickers
+        process_errors, error_tickers = process_data(day_watchlist_data.trade_date, day_watchlist_data.previous_date, tickers)
+        if i+1 < len(rp.TICKERS_BY_DAY):
+            time.sleep(61)
+        print_time_completed(process_errors, error_tickers)
+    print_time_completed()
 
 def run_tradervue_import():
     # DasWebTraderVueFormatter(rp.DAS_HISTORY)
-    DasProTraderVueFormatter(rp.DAS_HISTORY)
+    # DasProTraderVueFormatter(rp.DAS_HISTORY)
+    TradeZeroProTraderVueFormatter(rp.TZ_HISTORY)
     print_time_completed()
 
 def print_time_completed(process_errors=None, tickers=None):
@@ -108,3 +117,6 @@ def print_time_completed(process_errors=None, tickers=None):
         print(f"\nErrors encountered: {process_errors}")
         print(tickers)
     print(f"\n*** Time Completed: {current_time}")
+
+def print_tickers(watchlist):
+    ThinkOrSwimWatchlistFormatter(watchlist)

@@ -1,4 +1,9 @@
+import time
+
+import requests
 from datetime import datetime
+
+WEBHOOK_URL = "https://discord.com/api/webhooks/1361901870536462526/BWXuWZormp__LbnTaNj9Kn26ReYf7_XNE8B7AGxFy_IKbC9mm0SH3E1Dk_Ze6aSdu8eN"
 
 class DasProTraderVueFormatter:
     def __init__(self, data):
@@ -9,16 +14,20 @@ class DasProTraderVueFormatter:
         self.create_file()
 
     def create_file(self):
-        self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side,Commission,ECNFee")
+        discord_split = '\t \t'
+        self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side,Commission,ECNFee", "Date,Time,Symbol,Side,QTY,Price".replace(',', discord_split))
         today_date = datetime.today().strftime('%Y-%m-%d') #or manually set date
         for row in self.data:
             data_string = ','.join([today_date, row[0], row[1], row[2], row[3], row[4], str(int(row[2])*0.003), row[6]])
-            self.write_to_tradervue_file(data_string)
+            discord_string = discord_split.join([today_date, row[0], row[1], row[4], row[2], row[3]])
+            self.write_to_tradervue_file(data_string,discord_string)
 
-    def write_to_tradervue_file(self, data_string):
+    def write_to_tradervue_file(self, data_string, discord_string=None):
         with open(self.file_name, "a") as file:
             file.write(f"{data_string}\n")
         print(f"{data_string}")
+        if discord_string is not None:
+            self.send_discord_message(f"{discord_string}")
 
     def create_file_name(self):
         today_date = datetime.today().strftime('%Y-%m-%d')
@@ -34,3 +43,13 @@ class DasProTraderVueFormatter:
     def print_data(self):
         for row in self.data:
             print(row)
+
+    def send_discord_message(self, content):
+        time.sleep(1)
+        data = {
+            "content": content  # plain text message
+        }
+        response = requests.post(WEBHOOK_URL, json=data)
+
+        if response.status_code != 204:
+            print(f"Failed to send message: {response.status_code}, {response.text}")
