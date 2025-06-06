@@ -53,7 +53,7 @@ class ThinkOrSwimTraderVueFormatter:
                 # Time to close a trade
                 buy_qty, buy_total = 0, 0.0
                 sell_qty, sell_total = 0, 0.0
-                first_date = temp_queue[0]['date']
+                first_date = datetime.strptime(temp_queue[0]['date'], "%Y-%m-%d").strftime("%m/%d/%Y")
                 matched_qty = 0
 
                 for e in temp_queue:
@@ -79,8 +79,7 @@ class ThinkOrSwimTraderVueFormatter:
         print("\nSheets Paste-able")
         trades = self.executions_to_trades(self.total_trades)
         for trade in trades:
-            t_date = datetime.strptime(trade[0], "%Y-%m-%d").strftime("%m/%d/%Y")
-            ticker = trade[1]
+            t_date, ticker = trade[0:2]
             qty = str(trade[2])
             buy_price = str(trade[3])
             sell_price = str(trade[4])
