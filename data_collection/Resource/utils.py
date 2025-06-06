@@ -1,11 +1,10 @@
-from Model.DasWebTraderVueFormatter import DasWebTraderVueFormatter
-from Model.DasProTraderVueFormatter import DasProTraderVueFormatter
 from Model.DayWatchlistData import DayWatchlistData
 from Model.PolygonApi import PolygonApi
 from Model.PolygonDailyTickerData import PolygonDailyTickerData
 from Model.PolygonMinuteTickerData import PolygonMinuteTickerData
 from Model.PolygonTickerDetailsData import PolygonTickerDetailsData
 from Model.TradeZeroProTraderVueFormatter import TradeZeroProTraderVueFormatter
+from Model.ThinkOrSwimTraderVueFormatter import ThinkOrSwimTraderVueFormatter
 
 from datetime import datetime
 import pytz
@@ -108,7 +107,10 @@ def run_small_cap_data_collection():
 def run_tradervue_import():
     # DasWebTraderVueFormatter(rp.DAS_HISTORY)
     # DasProTraderVueFormatter(rp.DAS_HISTORY)
-    TradeZeroProTraderVueFormatter(rp.TZ_HISTORY)
+    if len(rp.TZ_HISTORY) > 5:
+        TradeZeroProTraderVueFormatter(rp.TZ_HISTORY)
+    if len(rp.TOS_HISTORY) > 5:
+        ThinkOrSwimTraderVueFormatter(rp.TOS_HISTORY)
     print_time_completed()
 
 def print_time_completed(process_errors=None, tickers=None):

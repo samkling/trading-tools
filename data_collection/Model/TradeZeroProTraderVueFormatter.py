@@ -23,7 +23,7 @@ class TradeZeroProTraderVueFormatter:
     def create_file(self):
         discord_split = '\t \t'
         # self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side", "Date,Symbol,QTY,Buy,Sell".replace(',', discord_split))
-        self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side")
+        self.write_to_tradervue_file("\nDate,Time,Symbol,Quantity,Price,Side")
         today_date = datetime.today().strftime('%Y-%m-%d') #or manually set date
         for row in self.data:
             entry_data, exit_data = self.transform_data(row, today_date)
