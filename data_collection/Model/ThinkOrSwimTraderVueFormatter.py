@@ -77,7 +77,7 @@ class ThinkOrSwimTraderVueFormatter:
 
     def send_total_pnl(self):
         print("\nSheets Paste-able")
-        trades = self.executions_to_trades(self.total_trades)
+        trades = self.executions_to_trades(self.total_trades)[::-1]
         for trade in trades:
             t_date, ticker = trade[0:2]
             qty = str(trade[2])
