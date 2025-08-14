@@ -6,7 +6,7 @@ from Model.PolygonTickerDetailsData import PolygonTickerDetailsData
 from Model.TradeZeroProTraderVueFormatter import TradeZeroProTraderVueFormatter
 from Model.ThinkOrSwimTraderVueFormatter import ThinkOrSwimTraderVueFormatter
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import time
 
@@ -104,6 +104,52 @@ def run_small_cap_data_collection():
         print_time_completed(process_errors, error_tickers)
     print_time_completed()
 
+def medved_to_tos(medved_data):
+    # Output with TOS header
+    # tos_lines = [",Exec Time,Spread,Side,Qty,Pos Effect,Symbol,Exp,Strike,Type,Price,Net Price,Order Type"]
+    tos_lines = []
+    data = medved_data.strip().split("\n")[::-1]
+
+    for line in data:
+        if line.startswith("Symbol") or line.startswith("Symb") or not line.strip():
+            continue
+
+        parts = line.split("    ") #4 spaces
+        symbol, order_date, action, qty_str, status, fills, *_ = parts
+
+        # Convert COVER → BUY
+        side = "BUY" if action.upper() == "COVER" else action.upper()
+
+        # Quantity (remove commas)
+        qty = qty_str.replace(",", "")
+        qty = f'-{qty}' if side[0] == 'S' else f'+{qty}'
+
+        # Extract fill qty and price from "1500@0.7904 (2)" style
+        if "@" in fills:
+            after_at = fills.split("@", 1)[1]
+            price = after_at.split()[0]  # take only first number
+        else:
+            price = ""
+
+        # Convert time from Eastern → Pacific
+        dt_et = datetime.strptime(order_date, "%m/%d/%y %I:%M:%S %p")
+        dt_pt = dt_et - timedelta(hours=3)
+        exec_time = dt_pt.strftime("%-m/%-d/%y %H:%M:%S")
+
+        # Spread = STOCK (always in your example)
+        spread = "STOCK"
+
+        # Position effect: TO OPEN if BUY/SHORT, TO CLOSE if SELL/COVER
+        pos_effect = "TO OPEN" if side in ("BUY", "SHORT") else "TO CLOSE"
+
+        # Order type: assume LMT if price present, else MKT
+        order_type = "LMT" if price else "MKT"
+
+        tos_lines.append(
+            f",{exec_time},{spread},{side},{qty},{pos_effect},{symbol},,,STOCK,{price},{price},{order_type}")
+
+    return "\n".join(tos_lines)
+
 def run_tradervue_import():
     # DasWebTraderVueFormatter(rp.DAS_HISTORY)
     # DasProTraderVueFormatter(rp.DAS_HISTORY)
@@ -111,6 +157,10 @@ def run_tradervue_import():
         TradeZeroProTraderVueFormatter(rp.TZ_HISTORY)
     if len(rp.TOS_HISTORY) > 5:
         ThinkOrSwimTraderVueFormatter(rp.TOS_HISTORY)
+    if len(rp.MEDVED_TRADER_HISTORY) > 5:
+        medved_data = medved_to_tos(rp.MEDVED_TRADER_HISTORY)
+        print(medved_data)
+        ThinkOrSwimTraderVueFormatter(medved_data)
     print_time_completed()
 
 def print_time_completed(process_errors=None, tickers=None):

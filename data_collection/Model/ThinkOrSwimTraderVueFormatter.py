@@ -25,6 +25,7 @@ class ThinkOrSwimTraderVueFormatter:
         trades = []
 
         for exec in executions:
+            exec.pop()
             date, time, symbol, qty_str, price_str, side = exec
             qty = int(qty_str)
             price = float(price_str)
@@ -65,8 +66,8 @@ class ThinkOrSwimTraderVueFormatter:
                         sell_total += e['qty'] * e['price']
                     matched_qty += e['qty'] if e['side'] == 'BUY' else 0  # Only count BUY side as total quantity
 
-                avg_buy = round(buy_total / buy_qty, 4) if buy_qty else 0.0
-                avg_sell = round(sell_total / sell_qty, 4) if sell_qty else 0.0
+                avg_buy = round(buy_total / buy_qty, 5) if buy_qty else 0.0
+                avg_sell = round(sell_total / sell_qty, 5) if sell_qty else 0.0
 
                 trades.append([first_date, symbol, buy_qty, avg_buy, avg_sell])
 
@@ -90,7 +91,7 @@ class ThinkOrSwimTraderVueFormatter:
     def create_file(self):
         discord_split = '\t \t'
         # self.write_to_tradervue_file("Date,Time,Symbol,Quantity,Price,Side", "Date,Symbol,QTY,Buy,Sell".replace(',', discord_split))
-        self.write_to_tradervue_file("\nDate,Time,Symbol,Quantity,Price,Side")
+        self.write_to_tradervue_file("\nDate,Time,Symbol,Quantity,Price,Side,Transfee")
         today_date = datetime.today().strftime('%Y-%m-%d') #or manually set date
         for row in self.data:
             trade = self.get_trade(row, today_date)
@@ -98,14 +99,16 @@ class ThinkOrSwimTraderVueFormatter:
             self.write_to_tradervue_file(trade_string)
 
     def get_trade(self, trade_info, today_date):
+        schwab_fee = 0.00016/2 #instead of just adding on the sell, add half to both
         t = trade_info[1].split()[1].split(":")
+        print(t[0])
         t[0] = str(int(t[0]) + 3)
         t_time = ":".join(t)
         t_qty = trade_info[4][1:]
         t_symbol = trade_info[6]
         t_price = trade_info[10]
         t_side = trade_info[3]
-        trade = [today_date, t_time, t_symbol, t_qty, t_price, t_side]
+        trade = [today_date, t_time, t_symbol, t_qty, t_price, t_side, str(int(t_qty)*schwab_fee)]
         self.tickers.add(t_symbol)
         self.total_trades.append(trade)
         return trade

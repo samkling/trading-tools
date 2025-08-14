@@ -1,22 +1,21 @@
 import watchlistData as wl
 #pull from TZ Web
 TZ_HISTORY = """
-ZENA	Long	-	-	-	1	3.18	5.619	5.74	0.1215	0.1215	06-05 10:02:45	06-05 10:03:22	No
-MODV	Long	-	-	-	1	2.31	3.079	3.24	0.1616	0.1616	06-05 09:50:55	06-05 09:52:01	No
-MODV	Long	-	-	-	1	2.31	3.04	2.971	-0.0692	-0.0692	06-05 09:47:18	06-05 09:49:08	No
 """
 
-#,Exec Time,Spread,Side,Qty,Pos Effect,Symbol,Exp,Strike,Type,Price,Net Price,Order Type
+
 TOS_HISTORY = """
-,6/5/25 08:44:11,STOCK,BUY,+15,TO OPEN,RVYL,,,STOCK,1,.985,MKT
-,6/5/25 08:44:11,STOCK,BUY,+15,TO OPEN,RVYL,,,STOCK,2,.985,MKT
-,6/5/25 08:46:15,STOCK,SELL,-10,TO CLOSE,RVYL,,,STOCK,10,1.001,MKT
-,6/5/25 08:46:15,STOCK,SELL,-10,TO CLOSE,RVYL,,,STOCK,20,1.001,MKT
-,6/5/25 08:46:15,STOCK,SELL,-10,TO CLOSE,RVYL,,,STOCK,30,1.001,MKT
-,6/5/25 08:44:11,STOCK,BUY,+10,TO OPEN,SPY,,,STOCK,.985,.985,MKT
-,6/5/25 08:46:15,STOCK,SELL,-10,TO CLOSE,SPY,,,STOCK,1.0009,1.001,MKT
-,6/5/25 08:44:11,STOCK,BUY,+10,TO OPEN,QQQ,,,STOCK,.985,.985,MKT
-,6/5/25 08:46:15,STOCK,SELL,-10,TO CLOSE,QQQ,,,STOCK,1.0009,1.001,MKT
+"""
+
+MEDVED_TRADER_HISTORY = """
+Symbol    Order Date    Action    Qty    Sts    Fills    Limit    Order ID    
+CAN    08/14/25 11:18:02 AM    COVER    1,500    Filled     1,500@0.7904        1003947238030    
+CAN    08/14/25 11:17:18 AM    SHORT    1,500    Filled     1,500@0.7953    0.795    1003946387984    
+PSTV    08/14/25 10:48:43 AM    SELL    1,500    Filled     1,500@0.5602 (2)        1003946386431    
+PSTV    08/14/25 10:48:27 AM    BUY    1,500    Filled     1,500@0.5606    0.5606    1003946386408
+Symb    Order Date    Action    Qty    Sts    Fills    Limit    Cmds    O.Type    RmQTY    Order ID    
+IXHL    08/14/25 10:24:33 AM    SELL    1,500    Filled     1,500@0.4129            Market        24    
+IXHL    08/14/25 10:24:05 AM    BUY    1,500    Filled     1,500@0.4131    0.4131        Limit        23    
 """
 
 TICKERS_BY_DAY = [
