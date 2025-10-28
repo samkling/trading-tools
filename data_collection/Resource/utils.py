@@ -114,7 +114,8 @@ def medved_to_tos(medved_data):
         if line.startswith("Symbol") or line.startswith("Symb") or not line.strip():
             continue
 
-        parts = line.split("    ") #4 spaces
+        parts = line.split("\t") #4 spaces
+        # print(parts)
         symbol, order_date, action, qty_str, status, fills, *_ = parts
 
         # Convert COVER → BUY
@@ -127,6 +128,9 @@ def medved_to_tos(medved_data):
         # Extract fill qty and price from "1500@0.7904 (2)" style
         if "@" in fills:
             after_at = fills.split("@", 1)[1]
+            before_at = fills.split("@", 1)[0]
+            qty = before_at.replace(",", "")
+            qty = f'-{qty}' if side[0] == 'S' else f'+{qty}'
             price = after_at.split()[0]  # take only first number
         else:
             price = ""
@@ -134,7 +138,8 @@ def medved_to_tos(medved_data):
         # Convert time from Eastern → Pacific
         dt_et = datetime.strptime(order_date, "%m/%d/%y %I:%M:%S %p")
         dt_pt = dt_et - timedelta(hours=3)
-        exec_time = dt_pt.strftime("%-m/%-d/%y %H:%M:%S")
+        # print(dt_pt)
+        exec_time = dt_pt.strftime("%m/%d/%y %H:%M:%S")
 
         # Spread = STOCK (always in your example)
         spread = "STOCK"
