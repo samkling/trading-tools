@@ -155,13 +155,32 @@ def medved_to_tos(medved_data):
 
     return "\n".join(tos_lines)
 
+def extract_section_as_string(filename, start_marker=",Exec Time,Spread,Side,Qty,Pos Effect,Symbol,Exp,Strike,Type,Price,Net Price,Order Type"):
+    section_lines = []
+    capture = False
+
+    with open(filename, "r", encoding="utf-8") as f:
+        for line in f:
+            stripped = line.strip()
+            if capture:
+                if stripped == "":
+                    break
+                section_lines.append(line.rstrip("\n"))
+            if stripped == start_marker:
+                capture = True
+
+    # Join into one string, like a docstring
+    return "\n".join(section_lines)
+
 def run_tradervue_import():
     # DasWebTraderVueFormatter(rp.DAS_HISTORY)
     # DasProTraderVueFormatter(rp.DAS_HISTORY)
     if len(rp.TZ_HISTORY) > 5:
         TradeZeroProTraderVueFormatter(rp.TZ_HISTORY)
     if len(rp.TOS_HISTORY) > 5:
-        ThinkOrSwimTraderVueFormatter(rp.TOS_HISTORY)
+        tos_hist = "../" + extract_section_as_string(rp.TOS_HISTORY.strip()) if ".csv" in rp.TOS_HISTORY else rp.TOS_HISTORY
+        print(tos_hist)
+        ThinkOrSwimTraderVueFormatter(tos_hist)
     if len(rp.MEDVED_TRADER_HISTORY) > 5:
         medved_data = medved_to_tos(rp.MEDVED_TRADER_HISTORY)
         print(medved_data)
